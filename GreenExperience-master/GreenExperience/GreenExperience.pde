@@ -11,7 +11,7 @@ int numPixelsOrig;
 int numPixels;
 boolean first = true;
 
-int greenSens = 20;  //lægges til r og b, for at sammenligne med grøn
+int greenSens = 20;  //lægges til r og b, for at sammenligne med grøn 20 anbefales
 
 int cWidth = 640;
 int cHeight = 480;
@@ -138,10 +138,10 @@ void draw() {
     stroke(0,255,0);
     circle(cWidth - Px, Py, 2* sqrt(greenCount/PI));
     
-    fill(255);
+    fill(255,0,0);
     text(greenCount , 200, 70, 20);
     
-    if (frameCount % 2 == 0) {
+    if (frameCount % 1 == 0) {
       sendOsc(Px,Py);
     }
 
