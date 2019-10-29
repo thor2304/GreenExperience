@@ -12,12 +12,15 @@ int numPixels;
 boolean first = true;
 
 int greenSens = 20;  //lægges til r og b, for at sammenligne med grøn 20 anbefales
+int redSens = 95;  //lægges til g og b, for at sammenligne med rød 20 anbefales
 
 int cWidth = 640;
 int cHeight = 480;
 
 int[][] greenP;
 int greenCount = 0;
+int[][] redP;
+int redCount = 0;
 
 Capture video;
 
@@ -29,6 +32,7 @@ NetAddress dest2;
 
 void setup() {
   greenP = new int[2][307000];
+  redP = new int[2][307000];
   
   // colorMode(HSB);
   size(640, 480, P2D);
@@ -90,6 +94,10 @@ void draw() {
            greenP[0][greenCount] = x;
            greenP[1][greenCount] = y;
            greenCount++;
+        } else if(igreen+redSens<ired && iblue + redSens < ired){
+           redP[0][redCount] = x;
+           redP[1][redCount] = y;
+           redCount++;
         }
             
 
@@ -118,37 +126,64 @@ void draw() {
       }
     }*/
     
-    int Tx = 0;
-    int Ty = 0;
+    int gTx = 0;
+    int gTy = 0;
     for(int i=0; i < greenCount; i++){
-      Tx+=greenP[0][i];
-      Ty+=greenP[1][i];
+      gTx+=greenP[0][i];
+      gTy+=greenP[1][i];
     }
-    float Px= 0;
-    float Py = 0;
+    float gPx= 0;
+    float gPy = 0;
     
     if(greenCount > 0){
-      Px= Tx/greenCount;
-      Py= Ty/greenCount;
+      gPx= gTx/greenCount;
+      gPy= gTy/greenCount;
     
     }
     
-    //println("grøn: " + Px + " , "  + Py);
+    // nu når vi til at arbejde med de røde pixels
+    
+    int rTx = 0;
+    int rTy = 0;
+    for(int i=0; i < redCount; i++){
+      rTx+=redP[0][i];
+      rTy+=redP[1][i];
+    }
+    float rPx = 0;
+    float rPy = 0;
+    
+    if(redCount > 0){
+      rPx= rTx/redCount;
+      rPy= rTy/redCount;
+    
+    }
+    
+    //println("grøn: " + gPx + " , "  + gPy);
+    // den grønne cirkel
     fill(255,0);
     stroke(0,255,0);
-    circle(cWidth - Px, Py, 2* sqrt(greenCount/PI));
+    circle(cWidth - gPx, gPy, 2* sqrt(greenCount/PI));
+    
+    fill(0,255,0);
+    text("greenCount: " + greenCount , 200, 70, 20);
+    
+    // den røde cirkel
+    fill(255,0);
+    stroke(255,0,0);
+    circle(cWidth - rPx, rPy, 2* sqrt(redCount/PI));
     
     fill(255,0,0);
-    text(greenCount , 200, 70, 20);
+    text("redCount: "+ redCount , 200, 100, 20);
     
     if (frameCount % 1 == 0) {
-      sendOsc(Px,Py);
+      sendOsc(gPx,gPy, rPx, rPy);
     }
 
     fill(0);
     
   }
   greenCount = 0;
+  redCount = 0;
 }
 
 
@@ -164,10 +199,30 @@ float diff(int p, int off) {
     blue(video.pixels[p+off]) - blue(video.pixels[p]);
 }
 
-void sendOsc(float px, float py) {
+void sendOsc(float gpx, float gpy, float rpx, float rpy) {
   OscMessage msg = new OscMessage("/wek/inputs");
-  msg.add(px);
-  msg.add(py);
+  msg.add(gpx);
+  msg.add(gpy);
+  msg.add(rpx);
+  msg.add(rpy);
   oscP5.send(msg, dest);
   oscP5.send(msg, dest2);
+}
+
+void keyPressed() {
+  if (key == '7') {
+    greenSens ++;
+    println("greenSens: " + greenSens);
+  }else if (key == '1') {
+    greenSens --;
+    println("greenSens: " + greenSens);
+  }else if (key == '9') {
+    redSens ++;
+    println("redSens: " + redSens);
+  }else if (key == '3') {
+    redSens --;
+    println("redSens: " + redSens);
+  }else{
+  println(key);
+  }
 }

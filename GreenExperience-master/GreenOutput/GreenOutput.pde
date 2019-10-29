@@ -5,6 +5,8 @@ NetAddress dest;
 
 int controlX = 0;
 int controlY = 0;
+int controlXr = 0;
+int controlYr = 0;
 
 int numClasses = 5;
 String messageName = "/outputs-1";
@@ -16,6 +18,13 @@ float circleRadius = 10;
 int colAlpha = 50;
 color drawCol = color(255);
 float fadeOutTime = 2000;
+
+boolean settingsmode = false;
+boolean fadeSelect = false;
+boolean fadeTimer = false;
+
+int cWidth = 640;
+int cHeight = 480;
 
 ArrayList <PVector> points = new ArrayList <PVector> ();
 
@@ -53,26 +62,83 @@ void draw(){
       }
     }
   }
+  
+  if(settingsmode && !fadeSelect){
+    fill(255, 0, 0);
+    rect(cWidth/2, cHeight/2, cWidth/2, cHeight/2);
+    fill(0, 255, 0);
+    rect(cWidth/2, 0, cWidth/2, cHeight/2);
+    fill(0, 0, 255);
+    rect(0, cHeight/2, cWidth/2, cHeight/2);
+    fill(255);
+    rect(0, 0, cWidth/2, cHeight/2);
+    stroke(0);
+    strokeWeight(4);
+    fill(drawCol);
+    circle(controlXr, controlYr, circleRadius);
+  }else if(settingsmode && fadeSelect){
+    background(0);
+    fill(255, 200);
+    rect(cWidth/2, cHeight/2, cWidth/2, cHeight/2);
+    fill(255, 150);
+    rect(cWidth/2, 0, cWidth/2, cHeight/2);
+    fill(255, 100);
+    rect(0, cHeight/2, cWidth/2, cHeight/2);
+    fill(255, 50);
+    rect(0, 0, cWidth/2, cHeight/2);
+    stroke(0);
+    strokeWeight(4);
+    fill(drawCol);
+    circle(controlXr, controlYr, circleRadius);
+  }
  
 }
 
 void oscEvent(OscMessage theOscMessage) {
   //println("received message");
- if (theOscMessage.checkAddrPattern("/wek/outputs")==true) {
-     if(theOscMessage.checkTypetag("f")) { // looking for numClasses values
+ if (theOscMessage.checkAddrPattern("/wek/outputs")) {
+     if(theOscMessage.checkTypetag("fff")) { // looking for numClasses values
         float o = theOscMessage.get(0).floatValue();
-        println(o);
-        
-        if(o == 1){
-         drawCol = color(255, 0, 0);
-        }else if(o == 2){
-         drawCol = color(0, 255, 0);
-        }else if(o == 3){
-         drawCol = color(255);
-        }else if(o == 4){
-         drawCol = color(255, 0, 255);
+        float c = theOscMessage.get(1).floatValue();
+        float h = theOscMessage.get(2).floatValue();
+        println(o, c, h);
+
+        if(c== 2){
+          settingsmode = true;
+          
+          if(h == 2 && fadeTimer){
+            fadeSelect = !fadeSelect;
+            fadeTimer = false;
+          }else if(h==1){
+            fadeTimer = true;
+          }
+          
+          if(fadeSelect){
+            if(o == 4){
+             fadeOutTime = 4000;
+            }else if(o == 3){
+             fadeOutTime = 3000;
+            }else if(o == 2){
+             fadeOutTime = 2000;
+            }else if(o == 1){
+             fadeOutTime = 1000;
+            }
+          }else if(fadeSelect == false){
+            if(o == 1){
+             drawCol = color(255);
+            }else if(o == 2){
+             drawCol = color(0, 255, 0);
+            }else if(o == 3){
+             drawCol = color(0,0,255);
+            }else if(o == 4){
+             drawCol = color(255, 0, 0);
+            }
+          }
+          
+        }else{
+          settingsmode = false;
+          fadeSelect = false;
         }
-        
         /*for (int i = 0; i < numClasses; i++) {
            float f = theOscMessage.get(i).floatValue(); 
            println(f);
@@ -85,6 +151,9 @@ void oscEvent(OscMessage theOscMessage) {
    //println("received coordinate");
    controlX = 640- (int) theOscMessage.get(0).floatValue();
    controlY = (int) theOscMessage.get(1).floatValue();
+   controlXr = 640- (int) theOscMessage.get(2).floatValue();
+   controlYr = (int) theOscMessage.get(3).floatValue();
+   
    if(controlX != 640 && controlY != 0){
    points.add(new PVector(640- (int) theOscMessage.get(0).floatValue(), (int) theOscMessage.get(1).floatValue(), millis()));
    } //makes sure we dont have any irrelevant pixels in the array (helps smoothen the curve)
